@@ -1,5 +1,12 @@
+require(archivist)
+require(digest)
+require(devtools)
+require(testthat)
+require(lubridate)
+
+
 tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...) {  #newObjectName,
-  ### use only functions defined in global environment, 'cos of serialize() inside digest(). Cause error: "cannot allocate buffer"
+  ### use only functions defined in a global environment, 'cos of serialize() inside digest(). Cause error: "cannot allocate buffer"
   print(cacheFreshness)
   expect_true( class(cacheFreshness) == "Period", info = "@@435 use lubridate, like 'days(3)'")
   # arguments1 <- as.list(match.call())
@@ -10,9 +17,9 @@ tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...)
   #   print(substitute( do.call(what = cache, args =  c(list(cacheRepo = cacheDir, FUN = funcName, notOlderThan = now() ),arguments1) ) )) 
   
   print("--------")
-  tmpl <- arguments2
+  tmpl <- arguments2 ### this copy and .FUN for digest
   tmpl$.FUN <- funcName
-  print(object.size(tmpl), units = "Mb")
+  print(object.size(arguments2), units = "Mb")
   ## hash depends on function (its code) and arguments (its values as well)
   outputHash <- digest(tmpl)
   localTags <- showLocalRepo(repoDir = cacheDir, "tags")
@@ -21,9 +28,9 @@ tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...)
   print(paste("@@82948 number of saves for current artifact:", nrow(isInRepo) ))
   
   tryToUseCache <- function(isInRepo) {
-    # tmpl <- eval(substitute( do.call(what = list, args = arguments1 
+    # arguments2 <- eval(substitute( do.call(what = list, args = arguments1 
     #                                  , envir = parent.frame(n = 2) ) ))
-    # tmpl <- eval( do.call(what = list, args = arguments2
+    # arguments2 <- eval( do.call(what = list, args = arguments2
     #                                  , envir = parent.frame(n = 2)  ))
     if (nrow(isInRepo) > 0) {
       print(paste("@@23984--- we r going to use last saved cache date is:", max(isInRepo$createdDate)))
@@ -64,15 +71,9 @@ tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...)
         e <- attr(callResult,"condition")$message
         print(paste("@0 try for" #, funcName
                      , "error:", e)) #, e
-        # print(  arguments1 )
         print(warnings())
-         # browser()
          # if (e$message == "Error in (function (cacheRepo")
         # print("note that u won't avoid an error if arguments r specified with error.")
-         # browser()
-    
-       # searchInLocalRepo(pattern =  "class:character", repoDir = cacheDir )
-       # searchInLocalRepo(pattern = "cacheId:00000", repoDir = cacheDir)
     
        ### report if cache exists and its date (if so). Almost copied from package inner fanction named "cache"
         # eval( substitute( do.call(what = cache
@@ -102,11 +103,16 @@ tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...)
     }
   } 
    
-
   if (is.null(callResult) | is.na(callResult)) {stop("@@0 seems there was an error in tryCatch cache")}
   return(callResult)
 }
 
-# cacheDir <- normalizePath("C:\path")
+cacheDir <- normalizePath("/home/blaBla/archivistRepo")
+# createLocalRepo(repoDir = cacheDir)
 print( summaryLocalRepo(repoDir = cacheDir) )
 # showLocalRepo(repoDir = cacheDir, "tags")
+# searchInLocalRepo(pattern =  "class:character", repoDir = cacheDir )
+
+# sampleFunction <- function(x) {sample(1:10, size = x)}
+# tryCatchCache4(funcName = sampleFunction, useCache = F, cacheFreshness = months(3)
+#                     , x = 5)
