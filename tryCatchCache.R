@@ -18,6 +18,7 @@ tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...)
   
   print("--------")
   tmpl <- arguments2 ### this copy and .FUN for digest
+  attributes(funcName) <- NULL ### according to cache function
   tmpl$.FUN <- funcName
   print(object.size(arguments2), units = "Mb")
   ## hash depends on function (its code) and arguments (its values as well)
