@@ -4,8 +4,15 @@ require(devtools)
 require(testthat)
 require(lubridate)
 
+# This function can enchase fault-tolerance of a system. It is useful for scripts which are run regularly. In case of any error this function will try to use cache. If everything is fine, then it will save a new fresh cache.
 
-tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...) {  #newObjectName,
+# Arguments:
+# funcName - function.
+# useCache - logical; indicating if an attempt to run the function should be made.
+# cacheFreshness - period; indicates time after which cache is not used at all.
+# ... - arguments which are passed to the function.
+
+tryCatchCache4 <- function( funcName, useCache = F, cacheFreshness = weeks(99), ...) {  #newObjectName,
   ### use only functions defined in a global environment, 'cos of serialize() inside digest(). Cause error: "cannot allocate buffer"
   print(cacheFreshness)
   expect_true( class(cacheFreshness) == "Period", info = "@@435 use lubridate, like 'days(3)'")
@@ -108,12 +115,23 @@ tryCatchCache4 <- function( funcName, useCache, cacheFreshness = weeks(99), ...)
   return(callResult)
 }
 
+### Example:
+### Set up a repository for machine first:
 cacheDir <- normalizePath("/home/blaBla/archivistRepo")
-# createLocalRepo(repoDir = cacheDir)
-print( summaryLocalRepo(repoDir = cacheDir) )
+createLocalRepo(repoDir = cacheDir)
 # showLocalRepo(repoDir = cacheDir, "tags")
 # searchInLocalRepo(pattern =  "class:character", repoDir = cacheDir )
+# print( summaryLocalRepo(repoDir = cacheDir) )
 
-# sampleFunction <- function(x) {sample(1:10, size = x)}
-# tryCatchCache4(funcName = sampleFunction, useCache = F, cacheFreshness = months(3)
-#                     , x = 5)
+
+### Regular usage:
+cacheDir <- normalizePath("/home/blaBla/archivistRepo")
+sampleFunction <- function(x) {sample(1:10, size = x)}
+tryCatchCache4(funcName = sampleFunction, useCache = F, cacheFreshness = months(3)
+                    , x = 5)
+
+### Note that it consumes disk space. It doesn't delete old cache itself.
+### Take a look at the repository:
+print( summaryLocalRepo(repoDir = cacheDir) )
+showLocalRepo(repoDir = cacheDir, "tags")
+searchInLocalRepo(pattern =  "class:character", repoDir = cacheDir )
